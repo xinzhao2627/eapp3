@@ -33,121 +33,78 @@ import android.view.WindowManager;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.example.explicitapp3.OverlayFunctions.*;
+
 import java.nio.ByteBuffer;
 
 public class OverlayService extends Service {
-    ImageReader imageReader;
+    public static final String TAG = "OverlayService";
+    OverlayFunctions overlayFunctions;
     WindowManager windowManager;
     public static int SERVICE_ID = 1667;
-    private MediaProjectionManager mediaProjectionManager;
-    private MediaProjection mMediaProjection;
-    private VirtualDisplay mVirtualDisplay;
-    private Surface mSurface;
-    private SurfaceView screenMirror;
+    private MediaProjection mediaProjection;
     Notification notification;
+    MediaProjectionManager mediaProjectionManager;
+    ScreenshotCapture screenshotCapture;
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.w(TAG, "onCreate: service initialized..");
         mediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+        if (overlayFunctions == null) overlayFunctions = new OverlayFunctions();
+        overlayFunctions.setMediaProjectionManager(mediaProjectionManager);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            setupOverlay();
+            overlayFunctions.setupOverlay(
+                    mediaProjection,
+                    getResources().getDisplayMetrics().densityDpi,
+                    (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE),
+                    (WindowManager) getSystemService(WINDOW_SERVICE)
+            );
         }
+
+//        screenshotCapture = new ScreenshotCapture(this);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            NotificationHelper.createNotificationChannel(getApplicationContext());
-            notification = NotificationHelper.createNotification(getApplicationContext());
+            notification = overlayFunctions.setNotification(getApplicationContext());
             startForeground(SERVICE_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
         }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//            NotificationHelper.createNotificationChannel(getApplicationContext());
+//            notification = NotificationHelper.createNotification(getApplicationContext());
+//            startForeground(SERVICE_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
+//        }
         int rc = intent.getIntExtra("resultCode", -1);
         Intent d = intent.getParcelableExtra("data");
+        Log.w(TAG, "onStartCommand: Media projection will now start capturing");
 
-        if (rc != -1 && d != null) {
-            mMediaProjection = mediaProjectionManager.getMediaProjection(rc, d);
-            if (mMediaProjection != null && mSurface != null) {
-                startScreenCapture();
+        if (rc == -1 && d != null) {
+            mediaProjection = mediaProjectionManager.getMediaProjection(rc, d);
+            if (mediaProjection != null && overlayFunctions.getSurface() != null) {
+                overlayFunctions.startScreenCapture(mediaProjection, getResources().getDisplayMetrics().densityDpi);
             }
         }
+        // nasty -1 (RESULT OK == -1???? (dont change wdk mwdkwudk))
+//        if (rc == -1 && d != null) {
+//            mediaProjection = mediaProjectionManager.getMediaProjection(rc, d);
+//            if (mediaProjection != null) {
+//                Log.w(TAG, "onStartCommand: Media projection will now start capturing");
+//                screenshotCapture.startCapture(mediaProjection);
+//            }
+//        }
         return START_STICKY;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    private void setupOverlay() {
-        LayoutInflater lf = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-
-        // this is the overlay view
-        View view = lf.inflate(R.layout.activity_overlay, null);
-        screenMirror = view.findViewById(R.id.screenMirror);
-        mSurface = screenMirror.getHolder().getSurface();
-        screenMirror.getHolder().addCallback(new SurfaceHolder.Callback() {
-            @Override
-            public void surfaceCreated(SurfaceHolder holder) {
-                mSurface = holder.getSurface();
-                if (mMediaProjection != null) startScreenCapture();
-            }
-            @Override public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
-            @Override public void surfaceDestroyed(SurfaceHolder holder) {}
-        });
-//        mHandler = new Handler(Looper.getMainLooper());
-        windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                900,
-                500,
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-                PixelFormat.OPAQUE
-        );
-        params.gravity = Gravity.TOP | Gravity.LEFT;
-        params.x = 100;
-        params.y = 100;
-        // init the imageview
-        windowManager.addView(view, params);
-    }
-
-    public void startScreenCapture() {
-        MediaProjection.Callback callback = new MediaProjection.Callback() {
-            @Override
-            public void onStop() {
-                super.onStop();
-                stopScreenCapture();
-            }
-        };
-        mMediaProjection.registerCallback(callback, null);
-
-        mVirtualDisplay = mMediaProjection.createVirtualDisplay(
-                "ScreenCapture",
-                900,
-                500,
-                getResources().getDisplayMetrics().densityDpi,
-                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                mSurface,
-                null,
-                null //mHandler
-        );
-    }
-    public void stopScreenCapture() {
-        if (mVirtualDisplay == null) {
-            return;
-        }
-        mVirtualDisplay.release();
-        mVirtualDisplay = null;
-    }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        stopScreenCapture();
-        if (windowManager != null && screenMirror != null) {
-            try {
-                windowManager.removeView((View) screenMirror.getParent());
-            } catch (Exception e) {
-                Log.e("OverlayService", "Error removing overlay view: " + e.getMessage());
-            }
-            windowManager = null;
+        if (screenshotCapture != null) {
+            screenshotCapture.destroy();
         }
-
+//        overlayFunctions.destroy(windowManager);
     }
 
     @Nullable

@@ -24,7 +24,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".OverlayService" android:foregroundServiceType="mediaProjection"/>
+        <service android:name=".OverlayService" android:foregroundServiceType="mediaProjection" android:exported="false"/>
     </application>
 
 </manifest>

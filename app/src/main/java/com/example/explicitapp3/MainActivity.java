@@ -13,6 +13,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Parcelable;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Surface;
@@ -37,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     ActivityResultLauncher<Intent> overlayPermissionLauncher;
     ActivityResultLauncher<Intent> mediaProjectionLauncher;
     public static final String TAG = "MainActivity";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,22 +69,32 @@ public class MainActivity extends AppCompatActivity {
 
         mediaProjectionLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), r -> {
             int resultCode = r.getResultCode();
+            Intent data = r.getData();
+
+            Log.d(TAG, "MediaProjection result - resultCode: " + resultCode);
+            Log.d(TAG, "MediaProjection result - data: " + data);
+
             if (resultCode == Activity.RESULT_OK) {
-                Intent data = r.getData();
+                // Permission granted
                 try {
                     Intent serviceIntent = new Intent(this, OverlayService.class);
                     serviceIntent.putExtra("resultCode", resultCode);
                     serviceIntent.putExtra("data", data);
 
-                    // android 14+ (currently using android 16 api 36)
+
+                    Log.d(TAG, "Starting service with resultCode: " + resultCode);
+                    Log.d(TAG, "Starting service with data: " + data);
+                    Log.d(TAG, "running...");
+
                     ContextCompat.startForegroundService(this, serviceIntent);
                     runAppButton.setText("Stop");
                 } catch (RuntimeException e) {
                     Log.w(TAG, "onCreate: Error on MediaProjectionInstance " + e.getMessage());
                 }
             } else {
-                Toast.makeText(this, "Screen sharing permission denied",
-                        Toast.LENGTH_SHORT).show();
+                // Permission denied or cancelled
+                Log.w(TAG, "Screen capture permission denied. ResultCode: " + resultCode);
+                Toast.makeText(this, "Screen sharing permission denied", Toast.LENGTH_SHORT).show();
             }
         });
         runAppButton.setOnClickListener((l) -> {
