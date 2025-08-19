@@ -20,7 +20,6 @@ import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -29,12 +28,10 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.nio.ByteBuffer;
 
@@ -42,22 +39,16 @@ public class OverlayService extends Service {
     ImageReader imageReader;
     WindowManager windowManager;
     public static int SERVICE_ID = 1667;
-
-    // Add these variables for screen capture
     private MediaProjectionManager mediaProjectionManager;
     private MediaProjection mMediaProjection;
     private VirtualDisplay mVirtualDisplay;
     private Surface mSurface;
     private SurfaceView screenMirror;
-
-
     Notification notification;
-
     @Override
     public void onCreate() {
         super.onCreate();
         mediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             setupOverlay();
         }
@@ -136,15 +127,12 @@ public class OverlayService extends Service {
                 null //mHandler
         );
     }
-
-
     public void stopScreenCapture() {
         if (mVirtualDisplay == null) {
             return;
         }
         mVirtualDisplay.release();
         mVirtualDisplay = null;
-//        runAppButton.setText("Start");
     }
 
     @Override
