@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--The activity_overlay.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp">
+    <SurfaceView
+        android:id="@+id/screenMirror"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+</LinearLayout>
