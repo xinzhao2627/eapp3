@@ -22,13 +22,18 @@ import androidx.annotation.RequiresApi;
 
 public class OverlayFunctions {
     private MediaProjectionManager mediaProjectionManager;
+    private MediaProjection mediaProjection;
     public Notification notification;
     Surface surface;
     SurfaceView screenMirror;
     VirtualDisplay mVirtualDisplay;
+    int dpi;
     public MediaProjectionManager setMediaProjectionManager(MediaProjectionManager mediaProjectionManager) {
         this.mediaProjectionManager = mediaProjectionManager;
         return this.mediaProjectionManager;
+    }
+    public void setMediaProjection(MediaProjection mediaProjection) {
+        this.mediaProjection = mediaProjection;
     }
 
     public Notification setNotification(Context context) {
@@ -36,7 +41,7 @@ public class OverlayFunctions {
         notification = NotificationHelper.createNotification(context);
         return notification;
     }
-    public void startScreenCapture(MediaProjection mMediaProjection, int dpi) {
+    public void startScreenCapture() {
         MediaProjection.Callback callback = new MediaProjection.Callback() {
             @Override
             public void onStop() {
@@ -44,9 +49,12 @@ public class OverlayFunctions {
                 stopScreenCapture();
             }
         };
-        mMediaProjection.registerCallback(callback, null);
-
-        mVirtualDisplay = mMediaProjection.createVirtualDisplay(
+        mediaProjection.registerCallback(callback, null);
+        if (mVirtualDisplay != null) {
+            mVirtualDisplay.release();
+            mVirtualDisplay = null;
+        }
+        mVirtualDisplay = mediaProjection.createVirtualDisplay(
                 "ScreenCapture",
                 900,
                 500,
@@ -60,6 +68,7 @@ public class OverlayFunctions {
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void setupOverlay(MediaProjection mMediaProjection, int dpi, LayoutInflater lf, WindowManager windowManager) {
         // this is the overlay view
+        this.dpi = dpi;
         View view = lf.inflate(R.layout.activity_overlay, null);
         screenMirror = view.findViewById(R.id.screenMirror);
         surface = screenMirror.getHolder().getSurface();
@@ -67,19 +76,22 @@ public class OverlayFunctions {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
                 surface = holder.getSurface();
-                if (mMediaProjection != null) startScreenCapture(mMediaProjection, dpi);
+                if (mediaProjection != null) startScreenCapture();
             }
             @Override public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
-            @Override public void surfaceDestroyed(SurfaceHolder holder) {}
+            @Override public void surfaceDestroyed(SurfaceHolder holder) {
+                stopScreenCapture();
+            }
         });
-//        mHandler = new Handler(Looper.getMainLooper());
+//      mHandler = new Handler(Looper.getMainLooper());
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 900,
                 500,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-                PixelFormat.OPAQUE
+                PixelFormat.TRANSLUCENT
         );
+
         params.gravity = Gravity.TOP | Gravity.LEFT;
         params.x = 100;
         params.y = 100;
