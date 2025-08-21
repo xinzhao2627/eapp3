@@ -62,6 +62,7 @@ public class OverlayService extends Service {
             wm = (WindowManager) getSystemService(WINDOW_SERVICE);
 
             if (overlayFunctions == null) overlayFunctions = new OverlayFunctions();
+            overlayFunctions.setWindowManager(wm);
             overlayFunctions.setMediaProjectionManager(mediaProjectionManager);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -77,8 +78,7 @@ public class OverlayService extends Service {
                 overlayFunctions.setupOverlay(
                         mediaProjection,
                         getResources().getDisplayMetrics().densityDpi,
-                        (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE),
-                        wm
+                        (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE)
                 );
             }
 
@@ -90,7 +90,7 @@ public class OverlayService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        overlayFunctions.destroy(wm);
+        overlayFunctions.destroy();
     }
 
     @Nullable
