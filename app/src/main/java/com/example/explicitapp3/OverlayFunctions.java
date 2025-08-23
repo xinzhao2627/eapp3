@@ -114,7 +114,9 @@ public class OverlayFunctions {
                 return true;
             }
             @Override
-            public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {}
+            public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {
+
+            }
         });
         DisplayMetrics displayMetrics = new DisplayMetrics();
         wm.getDefaultDisplay().getRealMetrics(displayMetrics);
@@ -133,8 +135,10 @@ public class OverlayFunctions {
 //        params.gravity = Gravity.TOP;
         // -1080
         Log.w("OverlayFunctions", "setupOverlay displaymetric is: "+ -displayMetrics.widthPixels);
+        // y 26 for samsung
+        // y 40 for google pixel 9
         params.x = 0;
-        params.y = 26;
+        params.y = -40;
         view.setClickable(false);
         view.setFocusable(false);
         view.setFocusableInTouchMode(false);
