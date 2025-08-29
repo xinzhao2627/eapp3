@@ -60,28 +60,24 @@ public class OverlayService extends Service {
         if (rc == -1 && d != null) {
             mediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
             wm = (WindowManager) getSystemService(WINDOW_SERVICE);
-
             if (overlayFunctions == null) overlayFunctions = new OverlayFunctions();
+
             overlayFunctions.setWindowManager(wm);
             overlayFunctions.setMediaProjectionManager(mediaProjectionManager);
+            overlayFunctions.setDpi(getResources().getDisplayMetrics().densityDpi);
+            notification = overlayFunctions.setNotification(getApplicationContext());
+            startForeground(SERVICE_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                notification = overlayFunctions.setNotification(getApplicationContext());
-                startForeground(SERVICE_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
-            }
             if (mediaProjection == null) {
                 mediaProjection = mediaProjectionManager.getMediaProjection(rc, d);
                 overlayFunctions.setMediaProjection(mediaProjection);
             }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                overlayFunctions.setupOverlay(
-                        mediaProjection,
-                        getResources().getDisplayMetrics().densityDpi,
-                        (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE)
-                );
-            }
-
+//            overlayFunctions.setupOverlay(
+//                    mediaProjection,
+//                    getResources().getDisplayMetrics().densityDpi,
+//                    (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE)
+//            );
+            overlayFunctions.setupOverlayScreenshot();
         }
 
         return START_STICKY;
