@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -25,6 +26,9 @@ android {
             )
         }
     }
+    androidResources {
+        noCompress += "tflite"
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -32,7 +36,8 @@ android {
 }
 
 dependencies {
-
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
@@ -40,4 +45,13 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    implementation(libs.play.services.vision)
+    implementation (libs.tensorflow.lite)
+    implementation(libs.tensorflow.lite.support)
+    implementation(libs.tensorflow.lite.task.text)
+    implementation (libs.firebase.ml.model.interpreter)
+    implementation(libs.firebase.ml.modeldownloader)
+    implementation (libs.tensorflow.lite.gpu.delegate.plugin)
+//    implementation (libs.api)
+//    implementation (libs.tokenizers)
 }

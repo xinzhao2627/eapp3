@@ -30,6 +30,9 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.firebase.Firebase;
+import com.google.firebase.FirebaseApp;
+
 public class MainActivity extends AppCompatActivity {
     Button runAppButton;
     Button overlayPermissionButton;
@@ -50,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        FirebaseApp.initializeApp(this);
 
         runAppButton = findViewById(R.id.runAppButton);
         overlayPermissionButton = findViewById(R.id.overlayPermissionButton);

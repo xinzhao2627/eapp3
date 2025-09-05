@@ -35,6 +35,7 @@ import androidx.annotation.RequiresApi;
 
 import com.example.explicitapp3.OverlayFunctions.*;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class OverlayService extends Service {
@@ -65,7 +66,12 @@ public class OverlayService extends Service {
             overlayFunctions.setWindowManager(wm);
             overlayFunctions.setMediaProjectionManager(mediaProjectionManager);
             overlayFunctions.setDpi(getResources().getDisplayMetrics().densityDpi);
-            notification = overlayFunctions.setNotification(getApplicationContext());
+            try {
+                notification = overlayFunctions.setNotification(getApplicationContext());
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             startForeground(SERVICE_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
 
             if (mediaProjection == null) {
@@ -77,6 +83,11 @@ public class OverlayService extends Service {
 //                    getResources().getDisplayMetrics().densityDpi,
 //                    (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE)
 //            );
+            try {
+                overlayFunctions.initModel();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             overlayFunctions.setupOverlayScreenshot();
         }
 
